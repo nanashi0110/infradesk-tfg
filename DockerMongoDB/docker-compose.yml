@@ -1,0 +1,27 @@
+# Versión estándar de docker-compose
+version: '3.8'
+
+# Aquí definimos nuestros "servicios" o contenedores
+services:
+  
+  # 1. Nuestro servicio de Base de Datos
+  mongodb:
+    image: mongo
+    container_name: mongo-tfg
+    ports:
+      - "27017:27017" # Puerto (tal como pediste)
+    
+    # --- LA PARTE CLAVE: Las credenciales ---
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: mi_pass_segura_123 # <-- Tu nueva contraseña
+    
+    # --- BONUS (Muy recomendado) ---
+    # Esto "conecta" una carpeta de tu PC al contenedor
+    # para que los datos no se borren si eliminas el contenedor.
+    volumes:
+      - mongo-data:/data/db
+
+# Definimos el "volumen" que usaremos para guardar los datos
+volumes:
+  mongo-data:
