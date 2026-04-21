@@ -10,6 +10,11 @@ import Registro from './Registro';
 // ==========================================
 
 function Inicio() {
+  //Bloque para el titulo de la pestaña
+  useEffect(() => {
+    document.title = "InfraDesk: Dashboard";
+  }, []);
+
   return (
     <div>
       <h1 style={tituloStyle}>🏠 Dashboard</h1>
@@ -19,6 +24,11 @@ function Inicio() {
 }
 
 function NuevoCliente({ token }) {
+  //Bloque para el titulo de la pestaña
+  useEffect(() => {
+    document.title = "InfraDesk: Nuevo Cliente";
+  }, []);
+
   const [cliente, setCliente] = useState({ nombreEmpresa: '', personaContacto: '', telefono: '', email: '' });
   const navegar = useNavigate();
 
@@ -63,6 +73,12 @@ function NuevoCliente({ token }) {
 
 function ListaClientes({ token }) {
   const [clientes, setClientes] = useState([]);
+  // ✅ NUEVO: Estado para guardar lo que el usuario escribe en el buscador
+  const [busqueda, setBusqueda] = useState('');
+  //Bloque para el titulo de la pestaña
+  useEffect(() => {
+    document.title = "InfraDesk: Clientes";
+  }, []);
 
   useEffect(() => {
     const obtenerClientes = async () => {
@@ -75,7 +91,13 @@ function ListaClientes({ token }) {
         
         if (respuesta.ok) {
           const datos = await respuesta.json();
-          setClientes(datos);
+          
+          // ✅ NUEVO: Ordenar los clientes alfabéticamente (de la A a la Z) antes de guardarlos
+          const clientesOrdenados = datos.sort((a, b) => 
+            a.nombreEmpresa.localeCompare(b.nombreEmpresa)
+          );
+          
+          setClientes(clientesOrdenados);
         } else {
           console.error("No autorizado para ver clientes");
         }
@@ -110,14 +132,37 @@ function ListaClientes({ token }) {
     }
   };
 
+  // ✅ NUEVO: Filtramos la lista en tiempo real según lo que se escriba en el buscador
+  const clientesFiltrados = clientes.filter((cli) => 
+    cli.nombreEmpresa.toLowerCase().includes(busqueda.toLowerCase()) || 
+    (cli.personaContacto && cli.personaContacto.toLowerCase().includes(busqueda.toLowerCase()))
+  );
+
   return (
     <div>
       <h2 style={tituloStyle}>📋 Base de Datos de Clientes</h2>
       
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', marginTop: '20px' }}>
+      {/* ✅ NUEVO: Barra de búsqueda */}
+      <div style={{ marginTop: '15px', marginBottom: '20px' }}>
+        <input 
+          type="text" 
+          placeholder="🔍 Buscar por empresa o contacto..." 
+          value={busqueda}
+          onChange={(e) => setBusqueda(e.target.value)}
+          style={{ ...inputStyle, maxWidth: '400px', border: '2px solid #00D1A0' }}
+        />
+      </div>
+      
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
         {clientes.length === 0 ? <p style={textoStyle}>Cargando o no hay clientes...</p> : null}
         
-        {clientes.map((cli) => (
+        {/* Mensaje si la búsqueda no encuentra a nadie */}
+        {clientes.length > 0 && clientesFiltrados.length === 0 ? (
+          <p style={{ color: '#E53E3E', fontWeight: 'bold' }}>No se ha encontrado ningún cliente con ese nombre.</p>
+        ) : null}
+        
+        {/* Usamos clientesFiltrados en lugar de clientes */}
+        {clientesFiltrados.map((cli) => (
           <div key={cli._id} style={{ 
             display: 'flex', 
             justifyContent: 'space-between', 
@@ -141,7 +186,7 @@ function ListaClientes({ token }) {
             <div style={{ display: 'flex', gap: '10px', marginLeft: '20px' }}>
               <Link 
                 to={`/ficha/${cli._id}`}
-                style={{ background: '#3182CE', color: 'white', textDecoration: 'none', padding: '10px 15px', borderRadius: '5px', cursor: 'pointer', fontSize: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                style={{ background: '#00D1A0', color: 'white', textDecoration: 'none', padding: '10px 15px', borderRadius: '5px', cursor: 'pointer', fontSize: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                 title="Abrir ficha completa"
               >
                 ✏️
@@ -149,7 +194,7 @@ function ListaClientes({ token }) {
               
               <button 
                 onClick={() => handleEliminar(cli._id, cli.nombreEmpresa)}
-                style={{ background: '#E53E3E', color: 'white', border: 'none', padding: '10px 15px', borderRadius: '5px', cursor: 'pointer', fontSize: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                style={{ background: '#4B5563', color: 'white', border: 'none', padding: '10px 15px', borderRadius: '5px', cursor: 'pointer', fontSize: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                 title="Eliminar cliente"
               >
                 🗑️
@@ -168,7 +213,7 @@ function FichaCliente({ token }) {
   const { id } = useParams();
   const [editando, setEditando] = useState(false);
   
-  // Estado inicial con campos extendidos (Sin el estado del equipo)
+  // Estado inicial con campos extendidos
   const [cliente, setCliente] = useState({
     nombreEmpresa: '',
     cif: '',
@@ -177,10 +222,10 @@ function FichaCliente({ token }) {
     cp: '',
     contactos: [{ nombre: '', cargo: '', movil: '' }],
     emails: [''],
-    equipos: [{ modelo: '', numSerie: '' }] // <-- QUitado el estado aquí
+    equipos: [{ modelo: '', numSerie: '' }]
   });
 
-  // Simulación de carga de datos
+  // ✅ Modificado: Carga de datos + Actualización de título de pestaña
   useEffect(() => {
     const cargarDatos = async () => {
       try {
@@ -188,12 +233,23 @@ function FichaCliente({ token }) {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         const datos = await res.json();
+        
         if (res.ok) {
           setCliente(prev => ({ ...prev, ...datos }));
+          
+          // Actualizamos el título con el nombre real de la empresa
+          document.title = `InfraDesk: ${datos.nombreEmpresa || 'Ficha de Cliente'}`;
         }
-      } catch (error) { console.error("Error al cargar ficha", error); }
+      } catch (error) { 
+        console.error("Error al cargar ficha", error);
+        document.title = "InfraDesk: Error al cargar";
+      }
     };
+    
     cargarDatos();
+
+    // Opcional: Título por defecto mientras carga
+    document.title = "InfraDesk: Cargando ficha...";
   }, [id, token]);
 
   // --- LÓGICA PARA CAMPOS DINÁMICOS ---
@@ -220,12 +276,9 @@ function FichaCliente({ token }) {
     setCliente({...cliente, equipos: nuevosEquipos});
   };
 
-  // <-- Quitado el estado de la función de añadir
   const añadirEquipo = () => setCliente({...cliente, equipos: [...cliente.equipos, { modelo: '', numSerie: '' }]});
 
-  // ✅ NUEVO: Función para Guardar en la Base de Datos
   const guardarFicha = async () => {
-    // Extraemos los campos intocables de Mongo y enviamos solo el resto (datosLimpios)
     const { _id, createdAt, updatedAt, __v, ...datosLimpios } = cliente;
 
     try {
@@ -240,6 +293,8 @@ function FichaCliente({ token }) {
 
       if (res.ok) {
         alert('✅ Ficha actualizada correctamente');
+        // Actualizamos el título de nuevo por si se cambió el nombre de la empresa en la edición
+        document.title = `InfraDesk: ${cliente.nombreEmpresa}`;
         setEditando(false); 
       } else {
         alert('❌ Error al guardar los cambios en la base de datos');
@@ -255,7 +310,7 @@ function FichaCliente({ token }) {
         <h2 style={tituloStyle}>📑 Ficha Técnica: {cliente.nombreEmpresa}</h2>
         <button 
           onClick={() => editando ? guardarFicha() : setEditando(true)}
-          style={{ ...botonAccion, background: editando ? '#4A5568' : '#3182CE', width: 'auto', padding: '10px 20px' }}
+          style={{ ...botonAccion, background: editando ? '#4A5568' : '#00D1A0', width: 'auto', padding: '10px 20px' }}
         >
           {editando ? '💾 Guardar Cambios' : '📝 Editar Ficha'}
         </button>
@@ -310,7 +365,6 @@ function FichaCliente({ token }) {
       <div style={seccionFicha}>
         <h3 style={subtituloFicha}>🛠️ Equipos e Instalaciones</h3>
         {cliente.equipos.map((eq, idx) => (
-          // <-- CAMBIO: Cambiado el gridTemplateColumns a '1fr 1fr' para que solo haya dos columnas
           <div key={idx} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '10px' }}>
             <input type="text" placeholder="Modelo Equipo" value={eq.modelo || ''} disabled={!editando} onChange={(e) => manejarEquipo(idx, 'modelo', e.target.value)} style={inputFicha} />
             <input type="text" placeholder="Nº Serie" value={eq.numSerie || ''} disabled={!editando} onChange={(e) => manejarEquipo(idx, 'numSerie', e.target.value)} style={inputFicha} />
@@ -398,7 +452,7 @@ function App() {
               <Link to="/nuevo-cliente" onClick={cerrarSiEsMovil} style={linkStyle}>{menuAbierto ? '➕ Nuevo Cliente' : '➕'}</Link>
               
               <div style={{ height: '1px', background: '#2D3748', margin: '10px 0', flexShrink: 0 }}></div>
-              <Link to="/registro" onClick={cerrarSiEsMovil} style={{...linkStyle, color: '#A0AEC0'}}>
+              <Link to="/registro" onClick={cerrarSiEsMovil} style={{...linkStyle, color: '#E5E7EB'}}>
                 {menuAbierto ? '👥 Añadir Usuario' : '👥'}
               </Link>
             </div>

@@ -1,7 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 function Login({ setToken }) {
+
+  useEffect(() => {
+    document.title = "InfraDesk: Login";
+  }, []);
+
   const [usuario, setUsuario] = useState(''); // <-- CAMBIADO
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
