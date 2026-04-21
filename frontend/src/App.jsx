@@ -148,8 +148,9 @@ function App() {
         </Routes>
       ) : (
         /* ✅ ZONA PRIVADA: El usuario está logueado */
-        <div style={{ display: 'flex', width: '100vw', height: '100vh', fontFamily: 'sans-serif', overflow: 'hidden', position: 'relative' }}>
+        <div style={{ display: 'flex', width: '100vw', height: '100dvh', fontFamily: 'sans-serif', overflow: 'hidden', position: 'relative' }}>
           
+          {/* === SIDEBAR === */}
           {/* === SIDEBAR === */}
           <div style={{ 
             width: menuAbierto ? '260px' : (esMovil ? '0px' : '70px'), 
@@ -162,29 +163,34 @@ function App() {
             zIndex: 100, 
             position: esMovil ? 'absolute' : 'relative', 
             height: '100%',
-            overflow: 'hidden',
+            overflowX: 'hidden', // <-- CAMBIO 1: Solo ocultamos lo que se sale a lo ancho, no a lo alto
             whiteSpace: 'nowrap'
           }}>
-            <div style={{ padding: '20px', background: '#1A202C', display: 'flex', justifyContent: menuAbierto ? 'space-between' : 'center', alignItems: 'center' }}>
+            
+            {/* Cabecera (Fija arriba) */}
+            <div style={{ padding: '20px', background: '#1A202C', display: 'flex', justifyContent: menuAbierto ? 'space-between' : 'center', alignItems: 'center', flexShrink: 0 }}>
               {menuAbierto && <span style={{ fontWeight: 'bold', fontSize: '18px' }}>Dashboard</span>}
               <button onClick={() => setMenuAbierto(!menuAbierto)} style={{ background: 'transparent', color: 'white', border: 'none', cursor: 'pointer', fontSize: '20px' }}>
                 {menuAbierto ? '◀' : '▶'}
               </button>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', padding: '15px', gap: '10px', marginTop: '10px', alignItems: menuAbierto ? 'stretch' : 'center', flex: 1 }}>
+            {/* Zona de enlaces (CON SCROLL INDEPENDIENTE) */}
+            {/* <-- CAMBIO 2: Añadimos overflowY: 'auto' aquí para que solo esta parte haga scroll */}
+            <div style={{ display: 'flex', flexDirection: 'column', padding: '15px', gap: '10px', marginTop: '10px', alignItems: menuAbierto ? 'stretch' : 'center', flex: 1, overflowY: 'auto' }}>
               <Link to="/" onClick={cerrarSiEsMovil} style={linkStyle}>{menuAbierto ? '🏠 Inicio' : '🏠'}</Link>
               <Link to="/clientes" onClick={cerrarSiEsMovil} style={linkStyle}>{menuAbierto ? '📋 Clientes' : '📋'}</Link>
               <Link to="/nuevo-cliente" onClick={cerrarSiEsMovil} style={linkStyle}>{menuAbierto ? '➕ Nuevo Cliente' : '➕'}</Link>
               
-              {/* NUEVO: Botón para crear usuarios administradores */}
-              <div style={{ height: '1px', background: '#2D3748', margin: '10px 0' }}></div>
+              <div style={{ height: '1px', background: '#2D3748', margin: '10px 0', flexShrink: 0 }}></div>
               <Link to="/registro" onClick={cerrarSiEsMovil} style={{...linkStyle, color: '#A0AEC0'}}>
                 {menuAbierto ? '👥 Añadir Usuario' : '👥'}
               </Link>
             </div>
 
-            <div style={{ padding: '15px', borderTop: '1px solid #2D3748' }}>
+            {/* Botón de Salir (Fijo abajo) */}
+            {/* <-- CAMBIO 3: Añadimos flexShrink: 0 para que NUNCA se aplaste o desaparezca */}
+            <div style={{ padding: '15px', borderTop: '1px solid #2D3748', flexShrink: 0 }}>
               <button onClick={handleCerrarSesion} style={{ width: '100%', padding: '10px', background: '#E53E3E', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', justifyContent: 'center' }}>
                 {menuAbierto ? 'Cerrar Sesión' : '🚪'}
               </button>
@@ -211,7 +217,7 @@ function App() {
 
           {/* === OVERLAY === */}
           {esMovil && menuAbierto && (
-            <div onClick={() => setMenuAbierto(false)} style={{ position: 'absolute', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.5)', zIndex: 90 }} />
+            <div onClick={() => setMenuAbierto(false)} style={{ position: 'absolute', top: 0, left: 0, width: '100vw', height: '100dvh', background: 'rgba(0,0,0,0.5)', zIndex: 90 }} />
           )}
 
         </div>
