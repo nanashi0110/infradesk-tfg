@@ -3,6 +3,10 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors'); // <-- Importamos CORS
 
+// --- IMPORTACIONES DE SEGURIDAD (NUEVO) ---
+const authRoutes = require('./routes/authRoutes');
+const authMiddleware = require('./middleware/authMiddleware');
+
 const app = express();
 const port = 3000;
 
@@ -15,14 +19,13 @@ const dbURL = `mongodb://root:${process.env.DB_PASSWORD}@localhost:27017/gestion
 
 mongoose.connect(dbURL)
   .then(() => {
-    console.log('Conectado a MongoDB (Docker)');
+    console.log('✅ Conectado a MongoDB (Docker)');
   })
   .catch((err) => {
-    console.error('Error al conectar a MongoDB:', err.message);
+    console.error('❌ Error al conectar a MongoDB:', err.message);
   });
 
-// 1. DEFINIR EL ESQUEMA
-
+// 1. DEFINIR EL ESQUEMA (Clientes)
 const customerSchema = new mongoose.Schema({
   nombreEmpresa: { type: String, required: true },
   personaContacto: String,
@@ -33,7 +36,9 @@ const customerSchema = new mongoose.Schema({
 // 2. CREAR EL MODELO
 const CustomerModel = mongoose.model('Customer', customerSchema);
 
-// RUTAS CRUD PARA CLIENTES (Create, Read, Update, Delete)
+// ==========================================
+// RUTAS PÚBLICAS (No necesitan Token)
+// ==========================================
 
 // RUTA 0: MENSAJE DE BIENVENIDA (GET)
 app.get('/', function(req, res) {
@@ -43,8 +48,16 @@ app.get('/', function(req, res) {
   });
 });
 
+// RUTAS DE AUTENTICACIÓN (Login y Registro) -> NUEVO
+app.use('/api/auth', authRoutes);
+
+
+// ==========================================
+// RUTAS PRIVADAS (CRUD CLIENTES) -> Protegidas por authMiddleware
+// ==========================================
+
 // RUTA 1: CREAR UN CLIENTE (POST)
-app.post('/api/customers', async function(req, res) {
+app.post('/api/customers', authMiddleware, async function(req, res) {
   try {
     const nuevoCliente = new CustomerModel(req.body);
     await nuevoCliente.save();
@@ -59,7 +72,7 @@ app.post('/api/customers', async function(req, res) {
 });
 
 // RUTA 2: OBTENER TODOS LOS CLIENTES (GET)
-app.get('/api/customers', async function(req, res) {
+app.get('/api/customers', authMiddleware, async function(req, res) {
   try {
     const todosLosClientes = await CustomerModel.find(); 
     res.json(todosLosClientes);
@@ -70,7 +83,7 @@ app.get('/api/customers', async function(req, res) {
 });
 
 // RUTA 3: OBTENER UN SOLO CLIENTE (GET)
-app.get('/api/customers/:id', async function(req, res) {
+app.get('/api/customers/:id', authMiddleware, async function(req, res) {
   try {
     const idQueNosPiden = req.params.id;
     const clienteEncontrado = await CustomerModel.findById(idQueNosPiden);
@@ -86,7 +99,7 @@ app.get('/api/customers/:id', async function(req, res) {
 });
 
 // RUTA 4: ACTUALIZAR UN CLIENTE (PUT)
-app.put('/api/customers/:id', async function(req, res) {
+app.put('/api/customers/:id', authMiddleware, async function(req, res) {
   try {
     const idQueNosPiden = req.params.id;
     const datosNuevos = req.body;
@@ -108,7 +121,7 @@ app.put('/api/customers/:id', async function(req, res) {
 });
 
 // RUTA 5: BORRAR UN CLIENTE (DELETE)
-app.delete('/api/customers/:id', async function(req, res) {
+app.delete('/api/customers/:id', authMiddleware, async function(req, res) {
   try {
     const idQueNosPiden = req.params.id;
     const clienteBorrado = await CustomerModel.findByIdAndDelete(idQueNosPiden);

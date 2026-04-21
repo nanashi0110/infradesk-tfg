@@ -1,5 +1,9 @@
 import { useState, useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Link, useNavigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Link, useNavigate, Navigate } from 'react-router-dom';
+
+// --- IMPORTAMOS LAS PANTALLAS DE SEGURIDAD (NUEVO) ---
+import Login from './Login';
+import Registro from './Registro';
 
 // ==========================================
 // 📄 PANTALLAS (El contenido de la derecha)
@@ -14,7 +18,8 @@ function Inicio() {
   );
 }
 
-function NuevoCliente() {
+// NUEVO: Ahora recibe el "token" por parámetros para poder enseñárselo al backend
+function NuevoCliente({ token }) {
   const [cliente, setCliente] = useState({ nombreEmpresa: '', personaContacto: '', telefono: '', email: '' });
   const navegar = useNavigate();
 
@@ -25,13 +30,18 @@ function NuevoCliente() {
     try {
       const respuesta = await fetch('/api/customers', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}` // <-- SEGURIDAD: Adjuntamos la pulsera VIP
+        },
         body: JSON.stringify(cliente),
       });
 
       if (respuesta.ok) {
         alert('✅ Cliente guardado con éxito');
         navegar('/clientes'); 
+      } else {
+        alert('Error al guardar: No tienes permisos o la sesión caducó');
       }
     } catch (error) {
       console.error("Error:", error);
@@ -41,7 +51,7 @@ function NuevoCliente() {
   return (
     <div>
       <h2 style={tituloStyle}>🏢 Alta de Nuevo Cliente</h2>
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', width: '400px', gap: '15px', marginTop: '20px' }}>
+      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', width: '100%', maxWidth: '400px', gap: '15px', marginTop: '20px' }}>
         <input type="text" name="nombreEmpresa" placeholder="Nombre de Empresa" onChange={handleChange} required style={inputStyle} />
         <input type="text" name="personaContacto" placeholder="Persona de Contacto" onChange={handleChange} style={inputStyle} />
         <input type="text" name="telefono" placeholder="Teléfono" onChange={handleChange} style={inputStyle} />
@@ -52,17 +62,32 @@ function NuevoCliente() {
   );
 }
 
-function ListaClientes() {
+// NUEVO: También recibe el "token" para poder pedir la lista
+function ListaClientes({ token }) {
   const [clientes, setClientes] = useState([]);
 
   useEffect(() => {
     const obtenerClientes = async () => {
-      const respuesta = await fetch('/api/customers');
-      const datos = await respuesta.json();
-      setClientes(datos);
+      try {
+        const respuesta = await fetch('/api/customers', {
+          headers: {
+            'Authorization': `Bearer ${token}` // <-- SEGURIDAD: Adjuntamos la pulsera VIP
+          }
+        });
+        
+        if (respuesta.ok) {
+          const datos = await respuesta.json();
+          setClientes(datos);
+        } else {
+          console.error("No autorizado para ver clientes");
+        }
+      } catch (error) {
+        console.error("Error de conexión");
+      }
     };
-    obtenerClientes();
-  }, []);
+    
+    if (token) obtenerClientes();
+  }, [token]);
 
   return (
     <div>
@@ -85,9 +110,11 @@ function ListaClientes() {
 // ==========================================
 // 🔀 LAYOUT PRINCIPAL (Sidebar + Contenido)
 // ==========================================
+
 function App() {
   const [esMovil, setEsMovil] = useState(window.innerWidth <= 768);
   const [menuAbierto, setMenuAbierto] = useState(window.innerWidth > 768);
+  const [token, setToken] = useState(localStorage.getItem('token') || '');
 
   useEffect(() => {
     const handleResize = () => {
@@ -105,74 +132,90 @@ function App() {
     if (esMovil) setMenuAbierto(false);
   };
 
+  const handleCerrarSesion = () => {
+    localStorage.removeItem('token');
+    setToken('');
+  };
+
   return (
     <BrowserRouter>
-      <div style={{ display: 'flex', width: '100vw', height: '100vh', fontFamily: 'sans-serif', overflow: 'hidden', position: 'relative' }}>
-        
-        {/* === SIDEBAR (Izquierda) === */}
-        <div style={{ 
-          width: menuAbierto ? '260px' : (esMovil ? '0px' : '70px'), 
-          background: '#0D1117', 
-          color: 'white',
-          transition: 'width 0.3s ease', 
-          display: 'flex', 
-          flexDirection: 'column',
-          boxShadow: '2px 0 5px rgba(0,0,0,0.1)',
-          zIndex: 100, 
-          position: esMovil ? 'absolute' : 'relative', 
-          height: '100%',
-          overflow: 'hidden',
-          whiteSpace: 'nowrap' // ✅ TRUCO: Evita que el texto se aplaste en la animación
-        }}>
-          {/* Cabecera del Sidebar */}
-          {/* ✅ CORRECCIÓN: Hemos quitado el minWidth: '260px' de aquí */}
-          <div style={{ padding: '20px', background: '#1A202C', display: 'flex', justifyContent: menuAbierto ? 'space-between' : 'center', alignItems: 'center' }}>
-            {menuAbierto && <span style={{ fontWeight: 'bold', fontSize: '18px' }}>Dashboard</span>}
-            <button 
-              onClick={() => setMenuAbierto(!menuAbierto)} 
-              style={{ background: 'transparent', color: 'white', border: 'none', cursor: 'pointer', fontSize: '20px' }}
-              title={menuAbierto ? "Contraer" : "Expandir"}
-            >
-              {menuAbierto ? '◀' : '▶'}
-            </button>
+      {/* 🛑 ZONA PÚBLICA: Si NO hay token, solo Login */}
+      {!token ? (
+        <Routes>
+          <Route path="/login" element={<Login setToken={setToken} />} />
+          {/* Si intentan ir a /registro o cualquier sitio sin login, los echa al login */}
+          <Route path="*" element={<Navigate to="/login" />} />
+        </Routes>
+      ) : (
+        /* ✅ ZONA PRIVADA: El usuario está logueado */
+        <div style={{ display: 'flex', width: '100vw', height: '100vh', fontFamily: 'sans-serif', overflow: 'hidden', position: 'relative' }}>
+          
+          {/* === SIDEBAR === */}
+          <div style={{ 
+            width: menuAbierto ? '260px' : (esMovil ? '0px' : '70px'), 
+            background: '#0D1117', 
+            color: 'white',
+            transition: 'width 0.3s ease', 
+            display: 'flex', 
+            flexDirection: 'column',
+            boxShadow: '2px 0 5px rgba(0,0,0,0.1)',
+            zIndex: 100, 
+            position: esMovil ? 'absolute' : 'relative', 
+            height: '100%',
+            overflow: 'hidden',
+            whiteSpace: 'nowrap'
+          }}>
+            <div style={{ padding: '20px', background: '#1A202C', display: 'flex', justifyContent: menuAbierto ? 'space-between' : 'center', alignItems: 'center' }}>
+              {menuAbierto && <span style={{ fontWeight: 'bold', fontSize: '18px' }}>Dashboard</span>}
+              <button onClick={() => setMenuAbierto(!menuAbierto)} style={{ background: 'transparent', color: 'white', border: 'none', cursor: 'pointer', fontSize: '20px' }}>
+                {menuAbierto ? '◀' : '▶'}
+              </button>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', padding: '15px', gap: '10px', marginTop: '10px', alignItems: menuAbierto ? 'stretch' : 'center', flex: 1 }}>
+              <Link to="/" onClick={cerrarSiEsMovil} style={linkStyle}>{menuAbierto ? '🏠 Inicio' : '🏠'}</Link>
+              <Link to="/clientes" onClick={cerrarSiEsMovil} style={linkStyle}>{menuAbierto ? '📋 Clientes' : '📋'}</Link>
+              <Link to="/nuevo-cliente" onClick={cerrarSiEsMovil} style={linkStyle}>{menuAbierto ? '➕ Nuevo Cliente' : '➕'}</Link>
+              
+              {/* NUEVO: Botón para crear usuarios administradores */}
+              <div style={{ height: '1px', background: '#2D3748', margin: '10px 0' }}></div>
+              <Link to="/registro" onClick={cerrarSiEsMovil} style={{...linkStyle, color: '#A0AEC0'}}>
+                {menuAbierto ? '👥 Añadir Usuario' : '👥'}
+              </Link>
+            </div>
+
+            <div style={{ padding: '15px', borderTop: '1px solid #2D3748' }}>
+              <button onClick={handleCerrarSesion} style={{ width: '100%', padding: '10px', background: '#E53E3E', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', justifyContent: 'center' }}>
+                {menuAbierto ? 'Cerrar Sesión' : '🚪'}
+              </button>
+            </div>
           </div>
 
-          {/* Enlaces */}
-          {/* ✅ CORRECCIÓN: También hemos quitado el minWidth de aquí y centramos los iconos al cerrar */}
-          <div style={{ display: 'flex', flexDirection: 'column', padding: '15px', gap: '10px', marginTop: '10px', alignItems: menuAbierto ? 'stretch' : 'center' }}>
-            <Link to="/" onClick={cerrarSiEsMovil} style={linkStyle}>{menuAbierto ? '🏠 Inicio' : '🏠'}</Link>
-            <Link to="/clientes" onClick={cerrarSiEsMovil} style={linkStyle}>{menuAbierto ? '📋 Clientes' : '📋'}</Link>
-            <Link to="/nuevo-cliente" onClick={cerrarSiEsMovil} style={linkStyle}>{menuAbierto ? '➕ Nuevo Cliente' : '➕'}</Link>
-          </div>
-        </div>
+          {/* === ZONA DE CONTENIDO === */}
+          <div style={{ flex: 1, padding: esMovil ? '20px' : '50px', background: '#F3F4F6', overflowY: 'auto', width: '100%' }}>
+            {esMovil && !menuAbierto && (
+              <button onClick={() => setMenuAbierto(true)} style={{ padding: '10px 15px', marginBottom: '20px', background: '#0D1117', color: 'white', border: 'none', borderRadius: '5px', fontSize: '18px', cursor: 'pointer' }}>
+                ☰ Menú
+              </button>
+            )}
 
-        {/* === ZONA DE CONTENIDO (Derecha) === */}
-        <div style={{ flex: 1, padding: esMovil ? '20px' : '50px', background: '#F3F4F6', overflowY: 'auto', width: '100%' }}>
-          {esMovil && !menuAbierto && (
-            <button 
-              onClick={() => setMenuAbierto(true)}
-              style={{ padding: '10px 15px', marginBottom: '20px', background: '#0D1117', color: 'white', border: 'none', borderRadius: '5px', fontSize: '18px', cursor: 'pointer' }}
-            >
-              ☰ Menú
-            </button>
+            <Routes>
+              <Route path="/" element={<Inicio />} />
+              <Route path="/clientes" element={<ListaClientes token={token} />} />
+              <Route path="/nuevo-cliente" element={<NuevoCliente token={token} />} />
+              {/* NUEVO: La ruta de registro ahora está escondida dentro del sistema */}
+              <Route path="/registro" element={<Registro token={token} />} /> 
+              <Route path="*" element={<Navigate to="/" />} />
+            </Routes>
+          </div>
+
+          {/* === OVERLAY === */}
+          {esMovil && menuAbierto && (
+            <div onClick={() => setMenuAbierto(false)} style={{ position: 'absolute', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.5)', zIndex: 90 }} />
           )}
 
-          <Routes>
-            <Route path="/" element={<Inicio />} />
-            <Route path="/clientes" element={<ListaClientes />} />
-            <Route path="/nuevo-cliente" element={<NuevoCliente />} />
-          </Routes>
         </div>
-
-        {/* === OVERLAY (Capa oscura) === */}
-        {esMovil && menuAbierto && (
-          <div 
-            onClick={() => setMenuAbierto(false)} 
-            style={{ position: 'absolute', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.5)', zIndex: 90 }}
-          />
-        )}
-
-      </div>
+      )}
     </BrowserRouter>
   );
 }
