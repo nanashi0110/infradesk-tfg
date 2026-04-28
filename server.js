@@ -7,6 +7,7 @@ const cors = require('cors');
 const authRoutes = require('./routes/authRoutes');
 const customerRoutes = require('./routes/customerRoutes'); // <-- NUEVO: Importamos el mapa de clientes
 const taskRoutes = require('./routes/taskRoutes');
+const credentialRoutes = require('./routes/credentialRoutes');
 
 const app = express();
 const port = 3000;
@@ -48,6 +49,8 @@ app.use('/api/customers', customerRoutes);
 
 // Enrutador de Tareas (/api/tasks/...)
 app.use('/api/tasks', taskRoutes);
+
+app.use('/api/credentials', credentialRoutes);
 
 // --- ARRANCAR EL SERVIDOR ---
 app.listen(port, function() {
