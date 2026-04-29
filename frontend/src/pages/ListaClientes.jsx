@@ -10,44 +10,55 @@ export default function ListaClientes({ token }) {
   const [clientes, setClientes] = useState([]);
   const [busqueda, setBusqueda] = useState('');
   
-  // Estados para el Modal de Nuevo Cliente
   const [mostrarModal, setMostrarModal] = useState(false);
   const [nuevoCliente, setNuevoCliente] = useState({ nombreEmpresa: '', personaContacto: '', telefono: '', email: '' });
   
-  useEffect(() => {
-    document.title = "InfraDesk: Clientes";
-    if (token) obtenerClientes();
-  }, [token]);
+  // 👇 NUEVO: Control del Modo Papelera
+  const [modoPapelera, setModoPapelera] = useState(false);
 
-  // Sacamos la función fuera del useEffect para poder llamarla cuando queramos actualizar la lista
+  useEffect(() => {
+    document.title = modoPapelera ? "InfraDesk: Papelera Clientes" : "InfraDesk: Clientes";
+    if (token) obtenerClientes();
+  }, [token, modoPapelera]);
+
   const obtenerClientes = async () => {
     try {
-      const respuesta = await fetch('/api/customers', { headers: { 'Authorization': `Bearer ${token}` } });
+      const endpoint = modoPapelera ? '/api/customers/papelera' : '/api/customers';
+      const respuesta = await fetch(endpoint, { headers: { 'Authorization': `Bearer ${token}` } });
       if (respuesta.ok) {
         const datos = await respuesta.json();
         const clientesOrdenados = datos.sort((a, b) => a.nombreEmpresa.localeCompare(b.nombreEmpresa));
         setClientes(clientesOrdenados);
-      } else {
-        console.error("No autorizado para ver clientes");
       }
-    } catch (error) {
-      console.error("Error de conexión");
-    }
+    } catch (error) { console.error("Error de conexión"); }
   };
 
+  // Mover a la papelera
   const handleEliminar = async (id, nombre) => {
-    if (!window.confirm(`⚠️ ¿Estás seguro de que quieres eliminar al cliente "${nombre}"? Esta acción no se puede deshacer.`)) return;
+    if (!window.confirm(`⚠️ ¿Mover al cliente "${nombre}" a la papelera?`)) return;
     try {
       const respuesta = await fetch(`/api/customers/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
-      if (respuesta.ok) {
-        setClientes(clientes.filter(cliente => cliente._id !== id));
-      } else {
-        alert("Error al eliminar el cliente");
-      }
-    } catch (error) { console.error("Error de conexión al eliminar", error); }
+      if (respuesta.ok) setClientes(clientes.filter(cliente => cliente._id !== id));
+    } catch (error) { console.error("Error al eliminar", error); }
   };
 
-  // Funciones del Modal
+  // Restaurar de la papelera
+  const handleRestaurar = async (id) => {
+    try {
+      await fetch(`/api/customers/${id}/restaurar`, { method: 'PUT', headers: { 'Authorization': `Bearer ${token}` } });
+      obtenerClientes();
+    } catch (error) { console.error("Error al restaurar"); }
+  };
+
+  // Destruir permanentemente
+  const handleDestruir = async (id, nombre) => {
+    if (!window.confirm(`🔥 ¿Destruir PERMANENTEMENTE a "${nombre}"? Esta acción no se puede deshacer y borrará sus credenciales asociadas.`)) return;
+    try {
+      await fetch(`/api/customers/${id}/destruir`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
+      obtenerClientes();
+    } catch (error) { console.error("Error al destruir"); }
+  };
+
   const handleCambioModal = (e) => setNuevoCliente({ ...nuevoCliente, [e.target.name]: e.target.value });
 
   const handleGuardarCliente = async (e) => {
@@ -60,22 +71,12 @@ export default function ListaClientes({ token }) {
       });
 
       if (respuesta.ok) {
-        // 1. Mensaje de éxito
         alert('✅ Cliente guardado con éxito');
-        
-        // 2. Limpiar el formulario y cerrar el modal inmediatamente
         setNuevoCliente({ nombreEmpresa: '', personaContacto: '', telefono: '', email: '' }); 
         setMostrarModal(false);
-        
-        // 3. Volver a pedir a la BD la lista para que se actualice la pantalla visualmente
         obtenerClientes(); 
-      } else {
-        alert('Error al guardar: No tienes permisos o la sesión caducó');
       }
-    } catch (error) { 
-      console.error("Error:", error); 
-      alert('Error de red al intentar guardar');
-    }
+    } catch (error) { alert('Error al guardar'); }
   };
 
   const clientesFiltrados = clientes.filter((cli) => 
@@ -85,15 +86,29 @@ export default function ListaClientes({ token }) {
 
   return (
     <div style={{ position: 'relative' }}>
+      
+      {/* CABECERA Y BOTONES DE MODO */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
-        <h2 style={{...tituloStyle, margin: 0, border: 'none'}}>📋 Base de Datos de Clientes</h2>
-        <button 
-          onClick={() => setMostrarModal(true)}
-          style={{ ...botonAccion, display: 'flex', alignItems: 'center', gap: '8px' }}
-        >
-          ➕ Nuevo Cliente
-        </button>
+        <h2 style={{...tituloStyle, margin: 0, border: 'none'}}>
+          {modoPapelera ? '🗑️ Papelera de Clientes' : '📋 Base de Datos de Clientes'}
+        </h2>
+        
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <button 
+            onClick={() => { setModoPapelera(!modoPapelera); setMostrarModal(false); setBusqueda(''); }}
+            style={{ background: modoPapelera ? '#374151' : '#E53E3E', color: 'white', padding: '10px 15px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}
+          >
+            {modoPapelera ? '🔙 Volver a Clientes' : '🗑️ Ver Papelera'}
+          </button>
+          
+          {!modoPapelera && (
+            <button onClick={() => setMostrarModal(true)} style={{ ...botonAccion, display: 'flex', alignItems: 'center', gap: '8px', marginTop: 0 }}>
+              ➕ Nuevo Cliente
+            </button>
+          )}
+        </div>
       </div>
+      
       <div style={{ height: '2px', background: '#E5E7EB', width: '100%', marginBottom: '15px', marginTop: '10px' }}></div>
       
       <div style={{ marginBottom: '20px' }}>
@@ -107,33 +122,41 @@ export default function ListaClientes({ token }) {
       </div>
       
       <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-        {clientes.length === 0 ? <p style={textoStyle}>Cargando o no hay clientes...</p> : null}
+        {clientes.length === 0 ? <p style={textoStyle}>{modoPapelera ? 'La papelera está vacía.' : 'Cargando o no hay clientes...'}</p> : null}
         {clientes.length > 0 && clientesFiltrados.length === 0 ? <p style={{ color: '#E53E3E', fontWeight: 'bold' }}>No se ha encontrado ningún cliente.</p> : null}
         
         {clientesFiltrados.map((cli) => (
-          <div key={cli._id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: '1px solid #E5E7EB', padding: '15px 20px', borderRadius: '8px', background: 'white', boxShadow: '0 2px 4px rgba(0,0,0,0.05)', width: '100%', boxSizing: 'border-box' }}>
+          <div key={cli._id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: '1px solid #E5E7EB', padding: '15px 20px', borderRadius: '8px', background: modoPapelera ? '#FEF2F2' : 'white', boxShadow: '0 2px 4px rgba(0,0,0,0.05)', width: '100%', boxSizing: 'border-box' }}>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', alignItems: 'center', flex: 1 }}>
-              <h3 style={{ margin: 0, color: '#111827', fontSize: '18px', minWidth: '220px' }}>{cli.nombreEmpresa}</h3>
+              <h3 style={{ margin: 0, color: modoPapelera ? '#991B1B' : '#111827', fontSize: '18px', minWidth: '220px' }}>{cli.nombreEmpresa}</h3>
               <span style={{ fontSize: '15px', color: '#4B5563', minWidth: '150px' }}>👤 {cli.personaContacto}</span>
               <span style={{ fontSize: '15px', color: '#4B5563', minWidth: '120px' }}>📞 {cli.telefono}</span>
               <span style={{ fontSize: '15px', color: '#4B5563' }}>✉️ {cli.email}</span>
             </div>
+            
             <div style={{ display: 'flex', gap: '10px', marginLeft: '20px' }}>
-              <Link to={`/ficha/${cli._id}`} style={{ background: '#00D1A0', color: 'white', textDecoration: 'none', padding: '10px 15px', borderRadius: '5px', fontSize: '16px', display: 'flex', alignItems: 'center' }} title="Abrir ficha">✏️</Link>
-              <button onClick={() => handleEliminar(cli._id, cli.nombreEmpresa)} style={{ background: '#4B5563', color: 'white', border: 'none', padding: '10px 15px', borderRadius: '5px', cursor: 'pointer', fontSize: '16px', display: 'flex', alignItems: 'center' }} title="Eliminar">🗑️</button>
+              {modoPapelera ? (
+                <>
+                  <button onClick={() => handleRestaurar(cli._id)} style={{ background: 'transparent', color: '#10B981', border: 'none', cursor: 'pointer', fontSize: '18px' }} title="Restaurar a Clientes">♻️</button>
+                  <button onClick={() => handleDestruir(cli._id, cli.nombreEmpresa)} style={{ background: 'transparent', color: '#DC2626', border: 'none', cursor: 'pointer', fontSize: '18px' }} title="Destruir Permanentemente">🔥</button>
+                </>
+              ) : (
+                <>
+                  <Link to={`/ficha/${cli._id}`} style={{ background: '#00D1A0', color: 'white', textDecoration: 'none', padding: '10px 15px', borderRadius: '5px', fontSize: '16px', display: 'flex', alignItems: 'center' }} title="Abrir ficha">✏️</Link>
+                  <button onClick={() => handleEliminar(cli._id, cli.nombreEmpresa)} style={{ background: '#4B5563', color: 'white', border: 'none', padding: '10px 15px', borderRadius: '5px', cursor: 'pointer', fontSize: '16px', display: 'flex', alignItems: 'center' }} title="Mover a Papelera">🗑️</button>
+                </>
+              )}
             </div>
           </div>
         ))}
       </div>
 
-      {mostrarModal && (
+      {/* MODAL (Oculto en modo papelera) */}
+      {mostrarModal && !modoPapelera && (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.6)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}>
           <div style={{ background: 'white', padding: '30px', borderRadius: '12px', width: '100%', maxWidth: '400px', boxShadow: '0 10px 25px rgba(0,0,0,0.2)', position: 'relative' }}>
             <button 
-              onClick={() => {
-                setMostrarModal(false);
-                setNuevoCliente({ nombreEmpresa: '', personaContacto: '', telefono: '', email: '' });
-              }}
+              onClick={() => { setMostrarModal(false); setNuevoCliente({ nombreEmpresa: '', personaContacto: '', telefono: '', email: '' }); }}
               style={{ position: 'absolute', top: '15px', right: '15px', background: 'transparent', border: 'none', fontSize: '20px', cursor: 'pointer', color: '#6B7280' }}
             >
               ✖

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Link, Navigate } from 'react-router-dom';
 
 import Login from './Login'; 
-import Registro from './Registro';
+import GestionUsuarios from './pages/GestionUsuarios';
 
 import Inicio from './pages/Inicio';
 import GestionTareas from './pages/GestionTareas';
@@ -10,7 +10,7 @@ import VistaCalendario from './pages/VistaCalendario';
 import ListaClientes from './pages/ListaClientes';
 import FichaCliente from './pages/FichaCliente';
 import RegistroExterno from './pages/RegistroExterno';
-import BovedaCredenciales from './pages/BovedaCredenciales'; // <-- Añadido
+import BovedaCredenciales from './pages/BovedaCredenciales';
 
 const linkStyle = { color: '#E5E7EB', textDecoration: 'none', fontWeight: '500', fontSize: '16px', display: 'block', padding: '12px', borderRadius: '6px', transition: 'background 0.2s' };
 
@@ -62,8 +62,8 @@ export default function App() {
               
               <div style={{ height: '1px', background: '#2D3748', margin: '10px 0' }}></div>
               
-              <Link to="/registro" onClick={cerrarSiEsMovil} style={linkStyle}>
-                {menuAbierto ? '👥 Añadir Usuario' : '👥'}
+              <Link to="/usuarios" onClick={cerrarSiEsMovil} style={linkStyle}>
+                {menuAbierto ? '👥 Usuarios' : '👥'}
               </Link>
             </div>
 
@@ -77,13 +77,13 @@ export default function App() {
           {/* CONTENIDO PRINCIPAL */}
           <div style={{ flex: 1, padding: esMovil ? '20px' : '50px', background: '#F3F4F6', overflowY: 'auto', width: '100%' }}>
             <Routes>
-              <Route path="/" element={<Inicio />} />
+              <Route path="/" element={<Inicio token={token} />} />
               <Route path="/clientes" element={<ListaClientes token={token} />} />
               <Route path="/tareas" element={<GestionTareas token={token} />} />
               <Route path="/calendario" element={<VistaCalendario token={token} />} />
               <Route path="/boveda" element={<BovedaCredenciales token={token} />} />
-              <Route path="/registro" element={<Registro token={token} />} /> 
               <Route path="/ficha/:id" element={<FichaCliente token={token} />} />
+              <Route path="/usuarios" element={<GestionUsuarios token={token} />} />
               <Route path="*" element={<Navigate to="/" />} />
             </Routes>
           </div>

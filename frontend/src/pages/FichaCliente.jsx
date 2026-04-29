@@ -11,6 +11,7 @@ const gridFicha = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px'
 const labelFicha = { display: 'block', marginBottom: '5px', fontSize: '14px', fontWeight: 'bold', color: '#4B5563' };
 const inputFicha = { width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #D1D5DB', boxSizing: 'border-box' };
 const botonPequeño = { padding: '8px 12px', background: '#E2E8F0', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '13px', fontWeight: 'bold' };
+const botonBorrarFila = { background: 'transparent', color: '#E53E3E', border: 'none', cursor: 'pointer', fontSize: '18px', padding: '5px 10px', display: 'flex', alignItems: 'center' };
 
 export default function FichaCliente({ token }) {
   const { id } = useParams();
@@ -32,6 +33,10 @@ export default function FichaCliente({ token }) {
         });
         const datos = await res.json();
         if (res.ok) {
+          if (!datos.emails || datos.emails.length === 0) datos.emails = [''];
+          if (!datos.contactos || datos.contactos.length === 0) datos.contactos = [{ nombre: '', cargo: '', movil: '' }];
+          if (!datos.equipos || datos.equipos.length === 0) datos.equipos = [{ modelo: '', numSerie: '' }];
+          
           setCliente(prev => ({ ...prev, ...datos }));
           document.title = `InfraDesk: ${datos.nombreEmpresa}`;
         }
@@ -48,32 +53,63 @@ export default function FichaCliente({ token }) {
     cargarDatos();
   }, [id, token]);
 
+  // --- LÓGICA DE EMAILS ---
   const manejarEmail = (index, valor) => {
     const nuevosEmails = [...cliente.emails];
     nuevosEmails[index] = valor;
     setCliente({...cliente, emails: nuevosEmails});
   };
-
   const añadirEmail = () => setCliente({...cliente, emails: [...cliente.emails, '']});
+  const borrarEmail = (index) => {
+    const filtrados = cliente.emails.filter((_, i) => i !== index);
+    setCliente({...cliente, emails: filtrados.length > 0 ? filtrados : ['']});
+  };
 
+  // --- LÓGICA DE CONTACTOS ---
   const manejarContacto = (index, campo, valor) => {
     const nuevosContactos = [...cliente.contactos];
     nuevosContactos[index][campo] = valor;
     setCliente({...cliente, contactos: nuevosContactos});
   };
-
   const añadirContacto = () => setCliente({...cliente, contactos: [...cliente.contactos, { nombre: '', cargo: '', movil: '' }]});
+  const borrarContacto = (index) => {
+    const filtrados = cliente.contactos.filter((_, i) => i !== index);
+    setCliente({...cliente, contactos: filtrados.length > 0 ? filtrados : [{ nombre: '', cargo: '', movil: '' }]});
+  };
 
+  // --- LÓGICA DE EQUIPOS ---
   const manejarEquipo = (index, campo, valor) => {
     const nuevosEquipos = [...cliente.equipos];
     nuevosEquipos[index][campo] = valor;
     setCliente({...cliente, equipos: nuevosEquipos});
   };
-
   const añadirEquipo = () => setCliente({...cliente, equipos: [...cliente.equipos, { modelo: '', numSerie: '' }]});
+  const borrarEquipo = (index) => {
+    const filtrados = cliente.equipos.filter((_, i) => i !== index);
+    setCliente({...cliente, equipos: filtrados.length > 0 ? filtrados : [{ modelo: '', numSerie: '' }]});
+  };
 
+  // --- GUARDADO Y LIMPIEZA AUTOMÁTICA ---
   const guardarFicha = async () => {
-    const { _id, createdAt, updatedAt, __v, ...datosLimpios } = cliente;
+    const emailsLimpios = cliente.emails.filter(email => email.trim() !== '');
+    const contactosLimpios = cliente.contactos.filter(cont => cont.nombre.trim() !== '' || cont.movil.trim() !== '' || cont.cargo.trim() !== '');
+    const equiposLimpios = cliente.equipos.filter(eq => eq.modelo.trim() !== '' || eq.numSerie.trim() !== '');
+
+    const datosLimpios = {
+      nombreEmpresa: cliente.nombreEmpresa,
+      cif: cliente.cif,
+      direccion: cliente.direccion,
+      localidad: cliente.localidad,
+      cp: cliente.cp,
+      // Mantenemos estos campos si existen en tu modelo
+      personaContacto: cliente.personaContacto,
+      telefono: cliente.telefono,
+      email: cliente.email,
+      emails: emailsLimpios,
+      contactos: contactosLimpios,
+      equipos: equiposLimpios
+    };
+
     try {
       const res = await fetch(`/api/customers/${id}`, {
         method: 'PUT',
@@ -85,6 +121,12 @@ export default function FichaCliente({ token }) {
       });
       if (res.ok) {
         alert('✅ Ficha actualizada correctamente');
+        setCliente(prev => ({ 
+          ...prev, 
+          emails: emailsLimpios.length > 0 ? emailsLimpios : [''],
+          contactos: contactosLimpios.length > 0 ? contactosLimpios : [{ nombre: '', cargo: '', movil: '' }],
+          equipos: equiposLimpios.length > 0 ? equiposLimpios : [{ modelo: '', numSerie: '' }]
+        }));
         setEditando(false); 
       }
     } catch (error) { console.error("Error al guardar", error); }
@@ -105,6 +147,11 @@ export default function FichaCliente({ token }) {
       <div style={seccionFicha}>
         <h3 style={subtituloFicha}>🏢 Datos de Empresa / Fiscales</h3>
         <div style={gridFicha}>
+          {/* AHORA EL NOMBRE ES EDITABLE */}
+          <div style={{ gridColumn: 'span 2' }}>
+            <label style={labelFicha}>Nombre de la Empresa:</label>
+            <input type="text" value={cliente.nombreEmpresa || ''} disabled={!editando} onChange={(e) => setCliente({...cliente, nombreEmpresa: e.target.value})} style={inputFicha} />
+          </div>
           <div>
             <label style={labelFicha}>CIF / NIF:</label>
             <input type="text" value={cliente.cif || ''} disabled={!editando} onChange={(e) => setCliente({...cliente, cif: e.target.value})} style={inputFicha} />
@@ -127,7 +174,12 @@ export default function FichaCliente({ token }) {
       <div style={seccionFicha}>
         <h3 style={subtituloFicha}>✉️ Agenda de Correos</h3>
         {cliente.emails.map((email, idx) => (
-          <input key={idx} type="email" value={email || ''} disabled={!editando} onChange={(e) => manejarEmail(idx, e.target.value)} style={{ ...inputFicha, marginBottom: '10px' }} placeholder="correo@ejemplo.com" />
+          <div key={idx} style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '10px' }}>
+            <input type="email" value={email || ''} disabled={!editando} onChange={(e) => manejarEmail(idx, e.target.value)} style={{ ...inputFicha, margin: 0 }} placeholder="correo@ejemplo.com" />
+            {editando && (
+              <button onClick={() => borrarEmail(idx)} style={botonBorrarFila} title="Eliminar correo">🗑️</button>
+            )}
+          </div>
         ))}
         {editando && <button onClick={añadirEmail} style={botonPequeño}>+ Añadir otro correo</button>}
       </div>
@@ -135,10 +187,15 @@ export default function FichaCliente({ token }) {
       <div style={seccionFicha}>
         <h3 style={subtituloFicha}>👥 Personas de Contacto</h3>
         {cliente.contactos.map((cont, idx) => (
-          <div key={idx} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px', marginBottom: '15px', padding: '10px', background: '#F9FAFB', borderRadius: '8px' }}>
-            <input type="text" placeholder="Nombre" value={cont.nombre || ''} disabled={!editando} onChange={(e) => manejarContacto(idx, 'nombre', e.target.value)} style={inputFicha} />
-            <input type="text" placeholder="Cargo" value={cont.cargo || ''} disabled={!editando} onChange={(e) => manejarContacto(idx, 'cargo', e.target.value)} style={inputFicha} />
-            <input type="text" placeholder="Móvil" value={cont.movil || ''} disabled={!editando} onChange={(e) => manejarContacto(idx, 'movil', e.target.value)} style={inputFicha} />
+          <div key={idx} style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '15px', padding: '10px', background: '#F9FAFB', borderRadius: '8px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px', flex: 1 }}>
+              <input type="text" placeholder="Nombre" value={cont.nombre || ''} disabled={!editando} onChange={(e) => manejarContacto(idx, 'nombre', e.target.value)} style={inputFicha} />
+              <input type="text" placeholder="Cargo" value={cont.cargo || ''} disabled={!editando} onChange={(e) => manejarContacto(idx, 'cargo', e.target.value)} style={inputFicha} />
+              <input type="text" placeholder="Móvil" value={cont.movil || ''} disabled={!editando} onChange={(e) => manejarContacto(idx, 'movil', e.target.value)} style={inputFicha} />
+            </div>
+            {editando && (
+              <button onClick={() => borrarContacto(idx)} style={botonBorrarFila} title="Eliminar contacto">🗑️</button>
+            )}
           </div>
         ))}
         {editando && <button onClick={añadirContacto} style={botonPequeño}>+ Añadir contacto</button>}
@@ -147,9 +204,14 @@ export default function FichaCliente({ token }) {
       <div style={seccionFicha}>
         <h3 style={subtituloFicha}>🛠️ Equipos e Instalaciones</h3>
         {cliente.equipos.map((eq, idx) => (
-          <div key={idx} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '10px' }}>
-            <input type="text" placeholder="Modelo" value={eq.modelo || ''} disabled={!editando} onChange={(e) => manejarEquipo(idx, 'modelo', e.target.value)} style={inputFicha} />
-            <input type="text" placeholder="Nº Serie" value={eq.numSerie || ''} disabled={!editando} onChange={(e) => manejarEquipo(idx, 'numSerie', e.target.value)} style={inputFicha} />
+          <div key={idx} style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '10px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', flex: 1 }}>
+              <input type="text" placeholder="Modelo" value={eq.modelo || ''} disabled={!editando} onChange={(e) => manejarEquipo(idx, 'modelo', e.target.value)} style={inputFicha} />
+              <input type="text" placeholder="Nº Serie" value={eq.numSerie || ''} disabled={!editando} onChange={(e) => manejarEquipo(idx, 'numSerie', e.target.value)} style={inputFicha} />
+            </div>
+            {editando && (
+              <button onClick={() => borrarEquipo(idx)} style={botonBorrarFila} title="Eliminar equipo">🗑️</button>
+            )}
           </div>
         ))}
         {editando && <button onClick={añadirEquipo} style={botonPequeño}>+ Registrar equipo</button>}
