@@ -65,6 +65,7 @@ export default function GestionTareas({ token }) {
     } catch (error) { console.error("Error al guardar tarea", error); }
   };
 
+  // 👇 LÓGICA DE COMPLETAR ACTUALIZADA (CON AVISO Y SEGURO ANTI-CLONACIÓN) 👇
   const handleCompletar = async (id, estadoActual) => {
     const nuevoEstado = estadoActual === 'Resuelta' ? 'Pendiente' : 'Resuelta';
     try {
@@ -73,7 +74,17 @@ export default function GestionTareas({ token }) {
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ estado: nuevoEstado })
       });
+      
       if (res.ok) {
+        // Leemos la respuesta del backend
+        const datos = await res.json();
+        
+        // Si el backend nos chiva que se ha clonado, lanzamos el aviso
+        if (datos.seHaClonado) {
+          alert('✅ ¡Tarea completada! Al ser una tarea recurrente, se ha generado automáticamente la del próximo ciclo en tu panel.');
+        }
+
+        // Refrescamos la lista para ver los cambios
         const resTareas = await fetch('/api/tasks', { headers: { 'Authorization': `Bearer ${token}` } });
         if (resTareas.ok) setTareas(await resTareas.json());
       }
@@ -132,7 +143,6 @@ export default function GestionTareas({ token }) {
       {!verResueltas && (
         <div style={{ background: editandoId ? '#EBF8FF' : 'white', padding: '20px', borderRadius: '10px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)', marginBottom: '30px', border: editandoId ? '2px solid #3182CE' : 'none' }}>
           
-          {/* ✅ AJUSTE: He añadido un marginBottom de 20px para separar el título del formulario */}
           <h3 style={{ marginTop: 0, marginBottom: '20px', color: '#4B5563', fontSize: '16px' }}>
             {editandoId ? '✏️ Editando Tarea' : '➕ Asignar Nueva Tarea'}
           </h3>

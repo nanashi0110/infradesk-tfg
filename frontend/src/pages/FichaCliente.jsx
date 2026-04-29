@@ -20,6 +20,7 @@ export default function FichaCliente({ token }) {
   
   const [cliente, setCliente] = useState({
     nombreEmpresa: '', cif: '', direccion: '', localidad: '', cp: '',
+    personaContacto: '', telefono: '', email: '', // <-- Añadimos los campos base aquí
     contactos: [{ nombre: '', cargo: '', movil: '' }],
     emails: [''],
     equipos: [{ modelo: '', numSerie: '' }]
@@ -101,7 +102,6 @@ export default function FichaCliente({ token }) {
       direccion: cliente.direccion,
       localidad: cliente.localidad,
       cp: cliente.cp,
-      // Mantenemos estos campos si existen en tu modelo
       personaContacto: cliente.personaContacto,
       telefono: cliente.telefono,
       email: cliente.email,
@@ -147,7 +147,6 @@ export default function FichaCliente({ token }) {
       <div style={seccionFicha}>
         <h3 style={subtituloFicha}>🏢 Datos de Empresa / Fiscales</h3>
         <div style={gridFicha}>
-          {/* AHORA EL NOMBRE ES EDITABLE */}
           <div style={{ gridColumn: 'span 2' }}>
             <label style={labelFicha}>Nombre de la Empresa:</label>
             <input type="text" value={cliente.nombreEmpresa || ''} disabled={!editando} onChange={(e) => setCliente({...cliente, nombreEmpresa: e.target.value})} style={inputFicha} />
@@ -168,11 +167,27 @@ export default function FichaCliente({ token }) {
             <label style={labelFicha}>C.P.:</label>
             <input type="text" value={cliente.cp || ''} disabled={!editando} onChange={(e) => setCliente({...cliente, cp: e.target.value})} style={inputFicha} />
           </div>
+          
+          {/* 👇 NUEVOS CAMPOS: CONTACTO PRINCIPAL 👇 */}
+          <div style={{ gridColumn: 'span 2', height: '1px', background: '#E5E7EB', margin: '10px 0' }}></div>
+          
+          <div>
+            <label style={labelFicha}>Contacto Principal:</label>
+            <input type="text" value={cliente.personaContacto || ''} disabled={!editando} onChange={(e) => setCliente({...cliente, personaContacto: e.target.value})} style={inputFicha} placeholder="Nombre del responsable" />
+          </div>
+          <div>
+            <label style={labelFicha}>Teléfono Principal:</label>
+            <input type="text" value={cliente.telefono || ''} disabled={!editando} onChange={(e) => setCliente({...cliente, telefono: e.target.value})} style={inputFicha} placeholder="Ej: 600 123 456" />
+          </div>
+          <div style={{ gridColumn: 'span 2' }}>
+            <label style={labelFicha}>Email Principal:</label>
+            <input type="email" value={cliente.email || ''} disabled={!editando} onChange={(e) => setCliente({...cliente, email: e.target.value})} style={inputFicha} placeholder="correo@empresa.com" />
+          </div>
         </div>
       </div>
 
       <div style={seccionFicha}>
-        <h3 style={subtituloFicha}>✉️ Agenda de Correos</h3>
+        <h3 style={subtituloFicha}>✉️ Agenda de Correos Adicionales</h3>
         {cliente.emails.map((email, idx) => (
           <div key={idx} style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '10px' }}>
             <input type="email" value={email || ''} disabled={!editando} onChange={(e) => manejarEmail(idx, e.target.value)} style={{ ...inputFicha, margin: 0 }} placeholder="correo@ejemplo.com" />
@@ -185,7 +200,7 @@ export default function FichaCliente({ token }) {
       </div>
 
       <div style={seccionFicha}>
-        <h3 style={subtituloFicha}>👥 Personas de Contacto</h3>
+        <h3 style={subtituloFicha}>👥 Personas de Contacto Adicionales</h3>
         {cliente.contactos.map((cont, idx) => (
           <div key={idx} style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '15px', padding: '10px', background: '#F9FAFB', borderRadius: '8px' }}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px', flex: 1 }}>
