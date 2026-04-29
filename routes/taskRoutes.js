@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const taskController = require('../controllers/taskController');
-const authMiddleware = require('../middleware/authMiddleware'); // El guardia de seguridad
+const authMiddleware = require('../middleware/authMiddleware');
 
 // Rutas protegidas para las tareas
 router.post('/', authMiddleware, taskController.crearTarea);

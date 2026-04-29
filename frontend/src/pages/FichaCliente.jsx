@@ -20,7 +20,7 @@ export default function FichaCliente({ token }) {
   
   const [cliente, setCliente] = useState({
     nombreEmpresa: '', cif: '', direccion: '', localidad: '', cp: '',
-    personaContacto: '', telefono: '', email: '', // <-- Añadimos los campos base aquí
+    personaContacto: '', telefono: '', email: '',
     contactos: [{ nombre: '', cargo: '', movil: '' }],
     emails: [''],
     equipos: [{ modelo: '', numSerie: '' }]
@@ -168,7 +168,6 @@ export default function FichaCliente({ token }) {
             <input type="text" value={cliente.cp || ''} disabled={!editando} onChange={(e) => setCliente({...cliente, cp: e.target.value})} style={inputFicha} />
           </div>
           
-          {/* 👇 NUEVOS CAMPOS: CONTACTO PRINCIPAL 👇 */}
           <div style={{ gridColumn: 'span 2', height: '1px', background: '#E5E7EB', margin: '10px 0' }}></div>
           
           <div>

@@ -9,7 +9,7 @@ exports.crearCliente = async (req, res) => {
   } catch (error) { res.status(500).json({ mensaje: "Error al guardar el cliente" }); }
 };
 
-// 2. OBTENER CLIENTES ACTIVOS (No eliminados)
+// 2. OBTENER CLIENTES ACTIVOS
 exports.obtenerClientes = async (req, res) => {
   try {
     const todosLosClientes = await Customer.find({ eliminado: false }); 
@@ -35,7 +35,7 @@ exports.actualizarCliente = async (req, res) => {
   } catch (error) { res.status(500).json({ mensaje: "Error al actualizar el cliente" }); }
 };
 
-// 5. MOVER A LA PAPELERA (Soft Delete)
+// 5. MOVER A LA PAPELERA
 exports.borrarCliente = async (req, res) => {
   try {
     const clienteBorrado = await Customer.findByIdAndUpdate(req.params.id, { eliminado: true }, { new: true });
@@ -43,8 +43,6 @@ exports.borrarCliente = async (req, res) => {
     res.json({ mensaje: "Cliente movido a la papelera", datosDelCliente: clienteBorrado });
   } catch (error) { res.status(500).json({ mensaje: "Error al mover a la papelera" }); }
 };
-
-// 👇 NUEVAS FUNCIONES PARA LA PAPELERA 👇
 
 // 6. OBTENER CLIENTES EN PAPELERA
 exports.getPapelera = async (req, res) => {
@@ -62,7 +60,7 @@ exports.restaurarCliente = async (req, res) => {
   } catch (error) { res.status(500).json({ mensaje: "Error al restaurar" }); }
 };
 
-// 8. DESTRUIR PERMANENTEMENTE (Hard Delete)
+// 8. DESTRUIR PERMANENTEMENTE
 exports.destruirCliente = async (req, res) => {
   try {
     await Customer.findByIdAndDelete(req.params.id);

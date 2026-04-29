@@ -3,16 +3,15 @@ import { Calendar, momentLocalizer } from 'react-big-calendar';
 import moment from 'moment';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 
-// 👇 FORZAMOS EL IDIOMA ESPAÑOL Y QUE LA SEMANA EMPIECE EN LUNES 👇
 moment.locale('es', {
   months: 'Enero_Febrero_Marzo_Abril_Mayo_Junio_Julio_Agosto_Septiembre_Octubre_Noviembre_Diciembre'.split('_'),
   monthsShort: 'Ene_Feb_Mar_Abr_May_Jun_Jul_Ago_Sep_Oct_Nov_Dic'.split('_'),
   weekdays: 'Domingo_Lunes_Martes_Miércoles_Jueves_Viernes_Sábado'.split('_'),
-  weekdaysShort: 'Lun_Mar_Mié_Jue_Vie_Sáb_Dom'.split('_'), // Para evitar bugs visuales
+  weekdaysShort: 'Lun_Mar_Mié_Jue_Vie_Sáb_Dom'.split('_'),
   weekdaysMin: 'Do_Lu_Ma_Mi_Ju_Vi_Sá'.split('_'),
   week: {
-    dow: 1, // 1 = Lunes es el primer día de la semana
-    doy: 4  // Requerido por moment para cálculos internos de semanas
+    dow: 1, 
+    doy: 4  
   }
 });
 
@@ -177,7 +176,6 @@ export default function VistaCalendario({ token }) {
         onSelectEvent={(evento) => abrirModalDia(evento.start)} 
         onDrillDown={(fecha) => abrirModalDia(fecha)}
         
-        // 👇 FORZAMOS EL FORMATO DE LOS DÍAS EN LA CABECERA 👇
         formats={{
           weekdayFormat: 'dddd', // Muestra "Lunes", "Martes", etc.
         }}

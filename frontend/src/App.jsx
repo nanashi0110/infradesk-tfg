@@ -74,7 +74,6 @@ export default function App() {
             </div>
           </div>
 
-          {/* CONTENIDO PRINCIPAL */}
           <div style={{ flex: 1, padding: esMovil ? '20px' : '50px', background: '#F3F4F6', overflowY: 'auto', width: '100%' }}>
             <Routes>
               <Route path="/" element={<Inicio token={token} />} />

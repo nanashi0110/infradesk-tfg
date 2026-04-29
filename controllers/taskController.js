@@ -18,25 +18,21 @@ exports.obtenerTareas = async (req, res) => {
   } catch (error) { res.status(500).json({ mensaje: "Error al obtener las tareas" }); }
 };
 
-// 3. ACTUALIZAR UNA TAREA (Con seguro anti-clonación)
+// 3. ACTUALIZAR UNA TAREA
 exports.actualizarTarea = async (req, res) => {
   try {
     const datosNuevos = { ...req.body };
-    let seHaClonado = false; // Chivato para el Frontend
+    let seHaClonado = false; 
 
-    // Buscamos la tarea original ANTES de modificarla
     const tareaOriginal = await Task.findById(req.params.id);
     if (!tareaOriginal) return res.status(404).json({ mensaje: "Tarea no encontrada" });
 
-    // Gestión de fechas de resolución
     if (datosNuevos.estado === 'Resuelta') {
       datosNuevos.fechaResolucion = new Date();
     } else if (datosNuevos.estado && datosNuevos.estado !== 'Resuelta') {
       datosNuevos.fechaResolucion = null; 
     }
 
-    // 🔄 LÓGICA DE RECURRENCIA (AUTO-CLONADO SEGURO)
-    // Solo clona si pasa a resuelta, es recurrente y NUNCA antes había sido clonada
     if (datosNuevos.estado === 'Resuelta' && tareaOriginal.esRecurrente && !tareaOriginal.clonada) {
       let proximaFecha = new Date(tareaOriginal.fechaVencimiento);
 
@@ -61,14 +57,13 @@ exports.actualizarTarea = async (req, res) => {
         esRecurrente: true,
         tipoRecurrencia: tareaOriginal.tipoRecurrencia,
         estado: 'Pendiente',
-        clonada: false // El hijo nace sin haber sido clonado
+        clonada: false
       });
       
       await tareaSiguiente.save();
       
-      // Marcamos a la original para que no vuelva a tener hijos
       datosNuevos.clonada = true; 
-      seHaClonado = true; // Avisamos de que ha habido parto
+      seHaClonado = true;
     }
 
     const tareaActualizada = await Task.findByIdAndUpdate(
@@ -77,7 +72,6 @@ exports.actualizarTarea = async (req, res) => {
       { new: true }
     ).populate('clienteId', 'nombreEmpresa');
 
-    // Devolvemos la tarea y el chivato
     res.json({ tarea: tareaActualizada, seHaClonado });
   } catch (error) { res.status(500).json({ mensaje: "Error al actualizar la tarea" }); }
 };

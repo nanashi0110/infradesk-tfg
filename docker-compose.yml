@@ -5,7 +5,6 @@ services:
     ports:
       - "27017:27017"
     environment:
-      # TODO: Cambiar estas credenciales en un entorno de producción real
       - MONGO_INITDB_ROOT_USERNAME=root
       - MONGO_INITDB_ROOT_PASSWORD=mi_pass_segura_123
     volumes:
@@ -19,7 +18,6 @@ services:
     ports:
       - "3000:3000"
     environment:
-      # Inyectamos las variables directamente para facilitar el despliegue de prueba
       - DB_PASSWORD=mi_pass_segura_123
       - DB_HOST=mongodb
       - JWT_SECRET=MiClaveSuperSecretaParaElTFG_2026!

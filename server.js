@@ -3,21 +3,20 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 
-// --- IMPORTACIONES DE RUTAS (Modulares) ---
+// --- IMPORTACIONES DE RUTAS ---
 const authRoutes = require('./routes/authRoutes');
-const customerRoutes = require('./routes/customerRoutes'); // <-- NUEVO: Importamos el mapa de clientes
+const customerRoutes = require('./routes/customerRoutes');
 const taskRoutes = require('./routes/taskRoutes');
 const credentialRoutes = require('./routes/credentialRoutes');
 
 const app = express();
 const port = 3000;
 
-// --- MIDDLEWARES GLOBALES ---
 app.use(cors()); 
 app.use(express.json()); 
 
 // --- CONEXIÓN A MONGODB ---
-// Si existe la variable DB_HOST (Docker) la usa, si no, usa localhost (Debian)
+// Si existe la variable DB_HOST (Docker) la usa, si no, usa localhost
 const dbHost = process.env.DB_HOST || 'localhost';
 const dbURL = `mongodb://root:${process.env.DB_PASSWORD}@${dbHost}:27017/gestion_tecnica_db?authSource=admin`;
 
@@ -33,7 +32,6 @@ mongoose.connect(dbURL)
 // CONFIGURACIÓN DE ENDPOINTS (API REST)
 // ==========================================
 
-// Mensaje de bienvenida
 app.get('/', function(req, res) {
   res.json({
     mensaje: "Bienvenido a la API del Sistema de Gestión Técnica",
@@ -41,13 +39,10 @@ app.get('/', function(req, res) {
   });
 });
 
-// Enrutador de Autenticación (/api/auth/...)
 app.use('/api/auth', authRoutes);
 
-// Enrutador de Clientes (/api/customers/...)
 app.use('/api/customers', customerRoutes);
 
-// Enrutador de Tareas (/api/tasks/...)
 app.use('/api/tasks', taskRoutes);
 
 app.use('/api/credentials', credentialRoutes);

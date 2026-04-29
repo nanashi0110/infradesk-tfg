@@ -22,7 +22,6 @@ const customerSchema = new mongoose.Schema({
     numSerie: { type: String, default: '' },
   }],
   
-  // 👇 NUEVO CAMPO: Papelera / Borrado Lógico
   eliminado: { type: Boolean, default: false }
 }, {
   timestamps: true 

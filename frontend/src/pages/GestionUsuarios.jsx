@@ -35,7 +35,7 @@ export default function GestionUsuarios({ token }) {
 
   const abrirEditar = (user) => {
     setEditandoId(user._id);
-    setForm({ nombre: user.nombre, usuario: user.usuario, password: '' }); // Password vacío por seguridad
+    setForm({ nombre: user.nombre, usuario: user.usuario, password: '' });
     setMensaje({ texto: '', tipo: '' });
     setMostrarModal(true);
   };
@@ -84,7 +84,6 @@ export default function GestionUsuarios({ token }) {
       </div>
       <div style={{ height: '2px', background: '#E5E7EB', width: '100%', marginBottom: '20px', marginTop: '10px' }}></div>
 
-      {/* LISTA DE USUARIOS */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
         {usuarios.map((user) => (
           <div key={user._id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: '1px solid #E5E7EB', padding: '15px 20px', borderRadius: '8px', background: 'white', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
@@ -102,7 +101,6 @@ export default function GestionUsuarios({ token }) {
         ))}
       </div>
 
-      {/* MODAL CREAR / EDITAR */}
       {mostrarModal && (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.6)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}>
           <div style={{ background: 'white', padding: '30px', borderRadius: '12px', width: '100%', maxWidth: '400px', boxShadow: '0 10px 25px rgba(0,0,0,0.2)', position: 'relative' }}>

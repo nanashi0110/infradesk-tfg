@@ -101,15 +101,13 @@ export default function Inicio({ token }) {
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                   {tareasUrgentes.map(tarea => {
-                    // --- LÓGICA DE FECHAS CORREGIDA ---
                     const hoy = new Date();
-                    hoy.setHours(0, 0, 0, 0); // Normalizamos hoy a las 00:00
+                    hoy.setHours(0, 0, 0, 0);
 
                     const fechaVencimiento = new Date(tarea.fechaVencimiento);
-                    fechaVencimiento.setHours(0, 0, 0, 0); // Normalizamos vencimiento a las 00:00
+                    fechaVencimiento.setHours(0, 0, 0, 0);
 
-                    const estaAtrasada = fechaVencimiento < hoy; // Solo será true si el día es anterior a hoy
-                    // ----------------------------------
+                    const estaAtrasada = fechaVencimiento < hoy;
 
                     return (
                       <div key={tarea._id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px', border: '1px solid #E5E7EB', borderRadius: '8px', background: estaAtrasada ? '#FEF2F2' : '#F9FAFB' }}>

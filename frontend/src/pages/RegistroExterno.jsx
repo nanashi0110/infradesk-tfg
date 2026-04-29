@@ -19,7 +19,6 @@ function RegistroExterno() {
     setMensajeExito('');
 
     try {
-      // Apuntamos al endpoint que dejamos abierto en el backend
       const respuesta = await fetch('/api/auth/registro', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

@@ -18,7 +18,7 @@ exports.registrarUsuario = async (req, res) => {
   } catch (error) { res.status(500).json({ mensaje: 'Error interno del servidor' }); }
 };
 
-// 2. INICIAR SESIÓN (LOGIN)
+// 2. INICIAR SESIÓN
 exports.loginUsuario = async (req, res) => {
   try {
     const { usuario, password } = req.body;
@@ -33,11 +33,7 @@ exports.loginUsuario = async (req, res) => {
   } catch (error) { res.status(500).json({ mensaje: 'Error interno del servidor' }); }
 };
 
-// =====================================
-// NUEVAS FUNCIONES PARA EL PANEL DE USUARIOS
-// =====================================
-
-// 3. OBTENER TODOS LOS USUARIOS (Sin enviar la contraseña, por seguridad)
+// 3. OBTENER TODOS LOS USUARIOS
 exports.obtenerUsuarios = async (req, res) => {
   try {
     const usuarios = await User.find().select('-password');
@@ -45,7 +41,7 @@ exports.obtenerUsuarios = async (req, res) => {
   } catch (error) { res.status(500).json({ mensaje: 'Error al obtener usuarios' }); }
 };
 
-// 4. ACTUALIZAR USUARIO (Nombre, Usuario y opcionalmente Contraseña)
+// 4. ACTUALIZAR USUARIO
 exports.actualizarUsuario = async (req, res) => {
   try {
     const { id } = req.params;
@@ -54,7 +50,6 @@ exports.actualizarUsuario = async (req, res) => {
     const userToUpdate = await User.findById(id);
     if (!userToUpdate) return res.status(404).json({ mensaje: 'Usuario no encontrado' });
 
-    // Si intenta cambiar el "usuario" a uno que ya existe (y no es él mismo)
     if (usuario !== userToUpdate.usuario) {
       const existe = await User.findOne({ usuario });
       if (existe) return res.status(400).json({ mensaje: 'Ese nombre de usuario ya está en uso' });
@@ -63,7 +58,6 @@ exports.actualizarUsuario = async (req, res) => {
     userToUpdate.nombre = nombre;
     userToUpdate.usuario = usuario;
 
-    // Si envía una contraseña nueva, la encriptamos. Si no, dejamos la vieja.
     if (password && password.trim() !== '') {
       const salt = await bcrypt.genSalt(10);
       userToUpdate.password = await bcrypt.hash(password, salt);
@@ -78,7 +72,6 @@ exports.actualizarUsuario = async (req, res) => {
 exports.eliminarUsuario = async (req, res) => {
   try {
     const { id } = req.params;
-    // Protección: Evitar que el usuario se borre a sí mismo accidentalmente (opcional, pero buena práctica)
     if (req.user && req.user.usuarioId === id) {
       return res.status(400).json({ mensaje: 'No puedes borrar tu propia cuenta activa' });
     }

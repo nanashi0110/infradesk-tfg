@@ -7,7 +7,7 @@ function Login({ setToken }) {
     document.title = "InfraDesk: Login";
   }, []);
 
-  const [usuario, setUsuario] = useState(''); // <-- CAMBIADO
+  const [usuario, setUsuario] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const navegar = useNavigate();
@@ -20,7 +20,7 @@ function Login({ setToken }) {
       const respuesta = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ usuario, password }) // <-- CAMBIADO
+        body: JSON.stringify({ usuario, password })
       });
 
       const datos = await respuesta.json();
@@ -55,7 +55,7 @@ function Login({ setToken }) {
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           <div>
-            {/* CAMBIADO: Etiqueta y Placeholder */}
+            {/* Etiqueta y Placeholder*/}
             <label style={{ display: 'block', marginBottom: '8px', color: '#E2E8F0', fontWeight: '500', fontSize: '14px' }}>Nombre de Usuario</label>
             <input 
               type="text" 

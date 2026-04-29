@@ -20,7 +20,7 @@ const taskSchema = new mongoose.Schema({
   horaFin: { type: String, default: "14:00" },
   todoElDia: { type: Boolean, default: false },
   
-  // 👇 NUEVO: Seguro anti-clonación infinita
+
   clonada: { type: Boolean, default: false }
     
 }, { timestamps: true });

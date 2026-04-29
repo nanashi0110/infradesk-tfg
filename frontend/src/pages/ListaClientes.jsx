@@ -13,7 +13,6 @@ export default function ListaClientes({ token }) {
   const [mostrarModal, setMostrarModal] = useState(false);
   const [nuevoCliente, setNuevoCliente] = useState({ nombreEmpresa: '', personaContacto: '', telefono: '', email: '' });
   
-  // 👇 NUEVO: Control del Modo Papelera
   const [modoPapelera, setModoPapelera] = useState(false);
 
   useEffect(() => {
@@ -33,7 +32,6 @@ export default function ListaClientes({ token }) {
     } catch (error) { console.error("Error de conexión"); }
   };
 
-  // Mover a la papelera
   const handleEliminar = async (id, nombre) => {
     if (!window.confirm(`⚠️ ¿Mover al cliente "${nombre}" a la papelera?`)) return;
     try {
@@ -42,7 +40,6 @@ export default function ListaClientes({ token }) {
     } catch (error) { console.error("Error al eliminar", error); }
   };
 
-  // Restaurar de la papelera
   const handleRestaurar = async (id) => {
     try {
       await fetch(`/api/customers/${id}/restaurar`, { method: 'PUT', headers: { 'Authorization': `Bearer ${token}` } });
@@ -50,7 +47,6 @@ export default function ListaClientes({ token }) {
     } catch (error) { console.error("Error al restaurar"); }
   };
 
-  // Destruir permanentemente
   const handleDestruir = async (id, nombre) => {
     if (!window.confirm(`🔥 ¿Destruir PERMANENTEMENTE a "${nombre}"? Esta acción no se puede deshacer y borrará sus credenciales asociadas.`)) return;
     try {

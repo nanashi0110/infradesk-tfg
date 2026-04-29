@@ -14,7 +14,7 @@ export default function BovedaCredenciales({ token }) {
   const [editandoId, setEditandoId] = useState(null);
   const [form, setForm] = useState({ clienteId: '', titulo: '', url: '', usuario: '', password: '', notas: '' });
   
-  // Estados para el buscador bonito
+  // Estados para el buscador
   const [busquedaClienteForm, setBusquedaClienteForm] = useState('');
   const [mostrarListaClientes, setMostrarListaClientes] = useState(false);
 
@@ -85,7 +85,6 @@ export default function BovedaCredenciales({ token }) {
     setBusquedaClienteForm(cred.clienteId.nombreEmpresa);
     setEditandoId(cred._id);
     setMostrarForm(true);
-    // 👇 SOLUCIÓN: Cambiado a false para que la contraseña empiece oculta en el modal
     setVerPasswordForm(false); 
     setCarpetasColapsadas(prev => ({ ...prev, [cred.clienteId._id]: false }));
   };

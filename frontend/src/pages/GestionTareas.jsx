@@ -65,7 +65,6 @@ export default function GestionTareas({ token }) {
     } catch (error) { console.error("Error al guardar tarea", error); }
   };
 
-  // 👇 LÓGICA DE COMPLETAR ACTUALIZADA (CON AVISO Y SEGURO ANTI-CLONACIÓN) 👇
   const handleCompletar = async (id, estadoActual) => {
     const nuevoEstado = estadoActual === 'Resuelta' ? 'Pendiente' : 'Resuelta';
     try {
@@ -76,15 +75,12 @@ export default function GestionTareas({ token }) {
       });
       
       if (res.ok) {
-        // Leemos la respuesta del backend
         const datos = await res.json();
         
-        // Si el backend nos chiva que se ha clonado, lanzamos el aviso
         if (datos.seHaClonado) {
           alert('✅ ¡Tarea completada! Al ser una tarea recurrente, se ha generado automáticamente la del próximo ciclo en tu panel.');
         }
 
-        // Refrescamos la lista para ver los cambios
         const resTareas = await fetch('/api/tasks', { headers: { 'Authorization': `Bearer ${token}` } });
         if (resTareas.ok) setTareas(await resTareas.json());
       }

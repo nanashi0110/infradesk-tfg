@@ -5,10 +5,10 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  usuario: {               // <-- CAMBIADO: Antes era 'email'
+  usuario: {               
     type: String,
     required: true,
-    unique: true           // Sigue siendo único (no puede haber dos "admin")
+    unique: true
   },
   password: {
     type: String,
