@@ -1,113 +1,125 @@
 # InfraDesk
 
-InfraDesk es una aplicacion web diseñada para centralizar la gestion de tareas de mantenimiento tecnico y el almacenamiento seguro de credenciales para administradores de sistemas.
+InfraDesk es una aplicación web diseñada para centralizar la gestión de tareas de mantenimiento técnico y el almacenamiento seguro de credenciales para administradores de sistemas.
 
-A continuacion se detallan las instrucciones para desplegar la aplicacion en entornos locales clonando el repositorio publico. El despliegue se basa en la tecnologia de contenedores Docker, por lo que no es necesario instalar manualmente Node.js o MongoDB en la maquina host.
+A continuación se detallan las instrucciones para desplegar la aplicación en entornos locales clonando el repositorio público. El despliegue se basa en la tecnología de contenedores Docker, por lo que no es necesario instalar manualmente Node.js o MongoDB en la máquina host.
 
 ---
 
-## 1. Despliegue en sistemas Linux
+## Despliegue
 
-Este procedimiento se ha probado en distribuciones basadas en Debian (Ubuntu) y RHEL.
+- [Linux](#despliegue-en-sistemas-linux)
+- [Windows](#despliegue-en-sistemas-windows)
 
-### Requisitos de software
+---
 
-Es necesario tener instalados los siguientes paquetes antes de proceder:
+## Despliegue en sistemas Linux
 
-1.  **Git**: Para clonar el repositorio.
-2.  **Docker Engine**: Version 20.10.0 o superior.
-3.  **Docker Compose**: Version 1.29.0 o superior.
+Este procedimiento se ha probado en distribuciones basadas en Debian.
 
-Asegurese de que su usuario pertenece al grupo `docker` para ejecutar comandos sin `sudo`.
+### Requisitos
 
-### Pasos para el despliegue (Linux)
+- Git  
+- Docker Engine (≥ 20.10.0)  
+- Docker Compose (≥ 1.29.0)  
 
-Abra una terminal y ejecute los siguientes comandos:
+Asegúrese de que su usuario pertenece al grupo `docker` para evitar usar `sudo`.
 
-1.  **Clonar el repositorio**:
-    ```bash
-    git clone [https://github.com/nanashi0110/infradesk-tfg.git](https://github.com/nanashi0110/infradesk-tfg.git)
-    ```
+### Instalación
 
-2.  **Acceder al directorio del proyecto**:
-    ```bash
-    cd infradesk-tfg
-    ```
+```bash
+git clone https://github.com/nanashi0110/infradesk-tfg
+cd infradesk-tfg
+```
 
-3.  **Configuracion de variables de entorno (Opcional)**:
-    El proyecto incluye archivos `.env.example` en las carpetas `backend` y `frontend`. Para una ejecucion estandar local, el archivo `docker-compose.yml` ya incorpora valores por defecto funcionales. Si desea cambiarlos, cree archivos `.env` correspondientes basandose en los ejemplos.
+### Ejecución
 
-4.  **Levantar los contenedores con Docker Compose**:
-    Este comando descargara las imagenes necesarias, construira los contenedores del frontend y backend, y levantara la base de datos MongoDB.
-    ```bash
-    docker-compose up -d --build
-    ```
-    *Nota: La bandera `-d` ejecuta los contenedores en segundo plano y `--build` asegura que se construyan las imagenes locales.*
+```bash
+docker-compose up -d --build
+```
 
-5.  **Verificar el estado**:
-    Compruebe que los tres contenedores (frontend, backend, database) estan en estado "Up".
-    ```bash
-    docker ps
-    ```
+- `-d`: modo segundo plano  
+- `--build`: fuerza la construcción de imágenes  
 
-6.  **Acceso a la aplicacion**:
-    Una vez que los contenedores esten corriendo, puede acceder a la interfaz web a traves de:
-    *   URL: `http://localhost:5173`
+### Verificación
 
-### Detencion del servicio (Linux)
+```bash
+docker ps
+```
 
-Para detener y borrar los contenedores manteniendo los datos de la base de datos (si se han configurado volumenes), ejecute:
+Debe ver 3 contenedores activos:
+
+- frontend  
+- backend  
+- database  
+
+### Acceso
+
+http://localhost:5173
+
+http://localhost:5173/registro-inicial
+
+### Detener
+
 ```bash
 docker-compose down
+```
 
-
+---
 
 ## Despliegue en sistemas Windows
 
-Este procedimiento requiere el uso de Docker Desktop, habilitar virtualización desde la BIOS y el uso del backend de WSL 2 (Windows Subsystem for Linux).
+### Requisitos
 
-### Requisitos de software
+- Git  
+- WSL 2  
+- Docker Desktop (con backend WSL 2 activado)  
 
-Es necesario instalar y configurar lo siguiente:
+### Instalación
 
-1.  **Git para Windows**: Instale Git conservando las opciones por defecto para la linea de comandos.
-2.  **WSL 2 **
-3.  **Docker Desktop**: Descargue e instale Docker Desktop. Durante la instalacion, asegurese de activar la opcion para usar el backend de WSL 2.
+```cmd
+git clone https://github.com/nanashi0110/infradesk-tfg
+cd infradesk-tfg
+```
 
-### Pasos para el despliegue (Windows)
+### Ejecución
 
-Puede utilizar Git Bash, Command Prompt (cmd) o PowerShell.
+Asegúrese de que Docker Desktop está en ejecución.
 
-1.  **Clonar el repositorio**:
-    Abra su terminal y clone el proyecto en una carpeta local
-    ```cmd
-    git clone [https://github.com/nanashi0110/infradesk-tfg.git](https://github.com/nanashi0110/infradesk-tfg.git)
-    ```
+```cmd
+docker-compose up -d --build
+```
 
-2.  **Acceder al directorio del proyecto**:
-    ```cmd
-    cd infradesk-tfg
-    ```
+### Verificación
 
-3.  **Asegurar que Docker Desktop esta ejecutandose**:
-    Inicie Docker Desktop desde el menu Inicio y espere a que el icono en la barra de tareas indique que esta "running" (verde).
+```cmd
+docker ps
+```
 
-4.  **Levantar los contenedores con Docker Compose**:
-    Ejecute el siguiente comando en la terminal dentro de la carpeta del proyecto:
-    ```cmd
-    docker compose up -d --build
-    ```
-    *Nota: En versiones modernas de Docker Desktop se usa `docker compose` (sin guion).*
+O desde Docker Desktop en la sección "Containers".
 
-5.  **Verificar el estado**:
-    Puede comprobarlo en la terminal con `docker ps` o visualmente en la interfaz grafica de Docker Desktop en la seccion "Containers". Deberia ver el grupo "infradesk-tfg" con tres contenedores activos.
+### Acceso
 
-6.  **Acceso a la aplicacion**:
-    Abra un navegador web y acceda a:
-    *   URL: `http://localhost:5173`
+http://localhost:5173
 
-### Detencion del servicio (Windows)
+http://localhost:5173/registro-inicial
 
-Para detener los contenedores, puede usar la interfaz grafica de Docker Desktop (boton Stop) o ejecutar en la terminal desde la carpeta del proyecto:
+### Detener
+
 ```cmd
 docker compose down
+```
+
+---
+
+## Notas
+
+- No es necesario instalar Node.js ni MongoDB manualmente.  
+- Todo el entorno se ejecuta mediante contenedores Docker.  
+- Compatible con Linux y Windows usando WSL 2.  
+
+---
+
+## Autor
+
+Proyecto desarrollado como TFG por Miguel Angel Gragera.
